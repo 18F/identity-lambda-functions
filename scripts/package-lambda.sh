@@ -7,4 +7,4 @@ pwd
 ls -la
 tree || echo 'no tree'
 
-zip -r build/function.zip main.rb vendor .ruby-version Gemfile Gemfile.lock
+zip -r config.json config.json.default main.rb identity-audit.rb lib vendor .ruby-version Gemfile Gemfile.lock
