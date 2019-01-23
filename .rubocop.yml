@@ -1,3 +1,8 @@
+AllCops:
+  Exclude:
+    - 'spec/**/*'
+    - '**/*_spec.rb'
+
 Layout/IndentHeredoc:
   Enabled: false
 Layout/EmptyLinesAroundModuleBody:

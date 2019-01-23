@@ -361,7 +361,7 @@ module IdentityAudit
       )
     end
 
-    # TODO: send an email/slack notice to users without MFA
+    # Send an email/slack notice to users without MFA
     def send_email_mfa_notice(user, user_hash)
       # don't email machine users
       if user_hash == :machine_user
