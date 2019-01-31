@@ -59,3 +59,16 @@ jobs:
       - store_artifacts:
           path: /tmp/test-results
           destination: test-results
+
+      # build and upload lambda .zip bundle
+      - run:
+          name: Build zip bundle
+          command: scripts/package-lambda.sh
+
+      - run:
+          name: Install AWS CLI
+          command: "set -euxo pipefail; sudo apt-get update; sudo apt-get install -y python-pip; sudo pip install awscli | cat"
+
+      - run:
+          name: Upload zip bundle
+          command: scripts/upload-lambda.sh
