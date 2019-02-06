@@ -11,8 +11,9 @@ class AbstractLambdaHandler
   end
 
   def self.process(event:, context:)
-    cli_run
-    _ = [event, context]
+    @lambda_event = event
+    @lambda_context = context
+    cli_run([])
   end
 
   def self.cli_run(args)
