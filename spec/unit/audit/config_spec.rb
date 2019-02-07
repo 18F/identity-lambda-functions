@@ -19,7 +19,7 @@ RSpec.describe IdentityAudit::Config do
     it 'has expected keys in config' do
       data = IdentityAudit::Config.new.data
       expect(data).to include('identity-audit')
-      keys = %w[team_yml_git_url team_yml_relative_path secret_id_for_ssh_key secret_id_for_github_access_token]
+      keys = %w[team_yml_github_repo team_yml_relative_path secret_id_for_github_access_token]
       expect(data.fetch('identity-audit')).to include(*keys)
     end
   end
