@@ -43,6 +43,7 @@ module IdentityAudit
       @group_email_address = @audit_config.fetch('group_cc_address')
     end
 
+    # @return [String]
     def main(_args)
       run_audit
     end
@@ -197,7 +198,7 @@ module IdentityAudit
 
     # Top level method for running audits, invoked by CLI.
     #
-    # @return <Fixnum>
+    # @return [String]
     def run_audit
       @reports = []
 
@@ -220,17 +221,19 @@ module IdentityAudit
       @reports << report
     end
 
+    # @return [String]
     def send_final_report
       if @reports.empty?
         log.info('All audits were clean!')
-        return
+        return 'All audits were clean!'
       end
 
       log.warn('Some audits failed')
 
-      send_raw_email(to_email: group_email_address, send_cc: false,
-                     subject: "[audit-aws] Report for #{aws_account_id}",
-                     body: <<~EOM
+      resp = send_raw_email(
+        to_email: group_email_address, send_cc: false,
+        subject: "[audit-aws] Report for #{aws_account_id}",
+        body: <<~EOM
           Report from audit-aws in AWS account #{aws_account_id}:
 
           #{@reports.join("\n")}
@@ -239,6 +242,8 @@ module IdentityAudit
           The audit-aws bot
         EOM
       )
+
+      resp.fetch(:raw_email)
     end
 
     # Main method for running AWS audits.
@@ -408,7 +413,7 @@ module IdentityAudit
       if dry_run?
         log.info('[DRY RUN] Would have sent email:')
         log.info("\n[DRY RUN]:\n" + raw_email.gsub(/^/, '    '))
-        return
+        return { ses_response: nil, raw_email: raw_email }
       else
         log.debug(raw_email)
       end
@@ -416,6 +421,8 @@ module IdentityAudit
       response = ses.send_raw_email(raw_message: { data: raw_email })
 
       log.debug("Sent email with message ID #{response.message_id}")
+
+      { ses_response: response, raw_email: raw_email }
     end
   end
 end

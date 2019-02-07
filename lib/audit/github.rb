@@ -39,6 +39,7 @@ module IdentityAudit
       @dry_run = dry_run
     end
 
+    # @return [String]
     def main(_args)
       run_audit
     end
@@ -230,6 +231,7 @@ module IdentityAudit
       out
     end
 
+    # @return [String] audit report
     def run_audit
       @reports = []
 
@@ -259,9 +261,9 @@ module IdentityAudit
 
       log.warn('Some audits failed')
 
-      send_raw_email(to_email: email_to_address,
-                     subject: 'audit-github report',
-                     body: <<~EOM
+      resp = send_raw_email(to_email: email_to_address,
+                            subject: 'audit-github report',
+                            body: <<~EOM
         Report from audit-github:
 
         #{@reports.join("\n")}
@@ -270,6 +272,8 @@ module IdentityAudit
         The audit-github bot
       EOM
       )
+
+      resp.fetch(:raw_email)
     end
 
     def send_raw_email(to_email:, subject:, body:)
@@ -284,17 +288,19 @@ module IdentityAudit
         #{body}
       EOM
 
-      log.debug(raw_email)
-
       if dry_run?
         log.info('[DRY RUN] Would have sent email:')
         log.info("[DRY RUN]\n" + raw_email.gsub(/^/, '    '))
-        return
+        return { ses_response: nil, raw_email: raw_email }
+      else
+        log.debug(raw_email)
       end
 
       response = ses.send_raw_email(raw_message: { data: raw_email })
 
       log.debug("Sent email with message ID #{response.message_id}")
+
+      { ses_response: response, raw_email: raw_email }
     end
 
     # All team.yml users should be a part of one or both of the core_team and
