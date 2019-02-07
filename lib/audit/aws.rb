@@ -20,9 +20,9 @@ module IdentityAudit
     attr_reader :iam, :iam_r
     attr_reader :ses
 
-    def initialize(log_level: Logger::INFO, dry_run: false)
+    def initialize(log_level: Logger::INFO, dry_run: true)
       log.level = log_level
-      log.debug('Initializing')
+      log.debug("Initializing, dry_run: #{dry_run.inspect}")
 
       begin
         @ses = Aws::SES::Client.new
@@ -86,7 +86,7 @@ module IdentityAudit
     # Retrieve new team data from team.yml in github
     def team_data!
       log.info('Fetching team.yml from repo')
-      raw = RepoCloner.read_team_yml_using_config
+      raw = RepoContent.read_team_yml_using_config
       YAML.safe_load(raw)
     end
 
@@ -294,7 +294,7 @@ module IdentityAudit
 
       if user.mfa_devices.count == 0
         enqueue_report("User #{user.user_name} has no MFA devices")
-        send_email_mfa_notice(user_yml_data)
+        send_email_mfa_notice(user, user_yml_data)
         return false
       end
 
@@ -306,9 +306,9 @@ module IdentityAudit
     end
 
     # @param [Aws::IAM::User] user
-    # @param [Hash] user_hash
+    # @param [Hash] user_yml_data Data for user from team.yml
     #
-    def check_keys(user, user_hash)
+    def check_keys(user, user_yml_data)
       user.access_keys.each do |k|
         age_days = ((Time.now - k.create_date) / 3600 / 24).round
         next if age_days <= AccessKeyAgeWarnDays
@@ -317,7 +317,7 @@ module IdentityAudit
           "User #{user.user_name} has access key #{k.access_key_id}" \
           " created #{age_days} days ago, needs rotation"
         )
-        send_email_key_rotation(user, user_hash,
+        send_email_key_rotation(user, user_yml_data,
                                 desc: k.access_key_id, days: age_days)
       end
 
@@ -329,7 +329,7 @@ module IdentityAudit
           "User #{user.user_name} has certificate #{k.certificate_id}" \
           " created #{age_days} days ago, needs rotation"
         )
-        send_email_key_rotation(user, user_hash,
+        send_email_key_rotation(user, user_yml_data,
                                 desc: k.certificate_id, days: age_days)
       end
     end
@@ -392,7 +392,8 @@ module IdentityAudit
     end
 
     def send_raw_email(to_email:, subject:, body:, send_cc: true)
-      log.info("send_email: #{to_email.inspect}, #{subject.inspect}, " \
+      log.info((dry_run? ? '[DRY RUN] ' : '') +
+               "send_email: #{to_email.inspect}, #{subject.inspect}, " +
                "#{body.length} chars body")
 
       raw_email = <<~EOM
@@ -404,12 +405,12 @@ module IdentityAudit
         #{body}
       EOM
 
-      log.debug(raw_email)
-
       if dry_run?
         log.info('[DRY RUN] Would have sent email:')
-        log.info("[DRY RUN]\n" + raw_email.gsub(/^/, '    '))
+        log.info("\n[DRY RUN]:\n" + raw_email.gsub(/^/, '    '))
         return
+      else
+        log.debug(raw_email)
       end
 
       response = ses.send_raw_email(raw_message: { data: raw_email })

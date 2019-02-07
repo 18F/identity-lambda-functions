@@ -21,9 +21,9 @@ module IdentityAudit
     attr_reader :ses
     attr_reader :lambda_config
 
-    def initialize(log_level: Logger::INFO, dry_run: false)
+    def initialize(log_level: Logger::INFO, dry_run: true)
       log.level = log_level
-      log.debug('Initializing')
+      log.debug("Initializing, dry_run: #{dry_run.inspect}")
 
       begin
         @ses = Aws::SES::Client.new
@@ -36,7 +36,6 @@ module IdentityAudit
 
       @ok = new_octokit_client(token: retrieve_github_access_token)
 
-      @audit_config = team_data.fetch('audit_config').fetch('github')
       @dry_run = dry_run
     end
 
@@ -63,16 +62,20 @@ module IdentityAudit
     # Retrieve new team data from team.yml in github
     def team_data!
       log.info('Fetching team.yml from repo')
-      raw = RepoCloner.read_team_yml_using_config
+      raw = RepoContent.read_team_yml_using_config
       YAML.safe_load(raw)
     end
 
+    def audit_config
+      team_data.fetch('audit_config').fetch('github')
+    end
+
     def email_from_address
-      @audit_config.fetch('email_report').fetch('from')
+      audit_config.fetch('email_report').fetch('from')
     end
 
     def email_to_address
-      @audit_config.fetch('email_report').fetch('to')
+      audit_config.fetch('email_report').fetch('to')
     end
 
     def new_octokit_client(token: nil, netrc_file: nil)
@@ -105,7 +108,7 @@ module IdentityAudit
     end
 
     def get_core_team_name
-      parts = @audit_config.fetch('core_team')
+      parts = audit_config.fetch('core_team')
       if parts.length != 2
         raise 'Expected core_team to contain 2 parts (org, team name)'
       end
@@ -113,7 +116,7 @@ module IdentityAudit
     end
 
     def get_yml_team_name
-      parts = @audit_config.fetch('team_yml_team')
+      parts = audit_config.fetch('team_yml_team')
       if parts.length != 2
         raise 'Expected team_yml_team to contain 2 parts (org, team name)'
       end

@@ -1,8 +1,7 @@
 {
   "identity-audit": {
-    "team_yml_git_url": "git@github.com:18F/identity-private",
+    "team_yml_github_repo": "18F/identity-private",
     "team_yml_relative_path": "team/team.yml",
-    "secret_id_for_ssh_key": "global/common/github/id_ecdsa.identity-servers",
     "secret_id_for_github_access_token": "global/lambda/audit-github-token"
   }
 }

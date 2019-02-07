@@ -7,4 +7,4 @@ end
 require_relative './audit/aws'
 require_relative './audit/config'
 require_relative './audit/github'
-require_relative './audit/repo_cloner'
+require_relative './audit/repo_content'
