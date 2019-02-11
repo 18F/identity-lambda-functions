@@ -2,3 +2,5 @@
 /build/
 /config.json
 /.bundle
+/cloudlib.yaml
+/.cloudlib-source.override.yaml

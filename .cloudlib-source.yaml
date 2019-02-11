@@ -1,0 +1,9 @@
+# This file defines where to find the cloudlib.yaml configuration. It is used
+# by `cl lambda init` to clone the git repo containing cloudlib.yaml.
+#
+# The file named by this config will be symlinked into this repo as
+# cloudlib.yaml.
+---
+repo_web_url: https://github.com/18F/identity-cloudlib-lambdas
+repo_clone_url: git@github.com:18F/identity-cloudlib-lambdas
+path_to_cloudlib_yaml: cloudlib.identity-lambda-functions.yaml
