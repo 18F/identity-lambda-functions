@@ -23,7 +23,8 @@ deploy_to_env() {
     local env
     env="$1"
 
-    echo "Deploying to ${env}..."
+    echo
+    echo "===== Deploying to ${env} ====="
 
     AWS_ACCESS_KEY_ID="$(deref "LG_${env}_AWS_ACCESS_KEY_ID")"
     AWS_SECRET_ACCESS_KEY="$(deref "LG_${env}_AWS_SECRET_ACCESS_KEY")"
@@ -39,14 +40,10 @@ EOM
     # aws cli needs these
     export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
 
-    built_zip="build/function.zip"
-
-    run sha256sum "$built_zip"
-
-    git_rev="$(run git rev-parse HEAD)"
     run aws s3 cp "$built_zip" "s3://$LG_DEPLOY_S3_BUCKET/${LG_DEPLOY_S3_PREFIX%%/}/$git_rev.zip"
 
-    echo "Uploaded $git_rev.zip successfully. Deploy to $env is complete!"
+    echo "Uploaded $git_rev.zip successfully."
+    echo "Deploy to $env is complete!"
 
     # To deploy uploaded bundle:
     # in separate script: aws lambda update-function-code --function-name helloWorld -bucket MyBucket --s3-key circleci/repo-name/$git_rev.zip
@@ -66,6 +63,11 @@ if [ -z "${LG_DEPLOY_S3_PREFIX-}" ]; then
     LG_DEPLOY_S3_PREFIX="${LG_DEPLOY_S3_PREFIX-circleci/$repo_name/}"
 fi
 
+built_zip="build/function.zip"
+
+run sha256sum "$built_zip"
+
+git_rev="$(run git rev-parse HEAD)"
 
 for env in $LG_AWS_ACCOUNTS; do
     deploy_to_env "$env"
