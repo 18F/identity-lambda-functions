@@ -79,6 +79,17 @@ module Functions
       'audit-aws'
     end
   end
+
+  # Lambda handler for cloudtrail-to-dynamo
+  class CloudTrailToDynamoHandler < AbstractLambdaHandler
+    def self.klass
+      IdentityKMSMonitor::CloudTrailToDynamoHandler
+    end
+
+    def self.cli_name
+      'cloudtrail-to-dynamo'
+    end
+  end
 end
 
 def cli_main
