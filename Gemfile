@@ -9,6 +9,7 @@ group 'development' do
   gem 'rspec_junit_formatter', '~> 0.4'
 end
 
+gem "aws-sdk-dynamodb", "~> 1.25"
 gem 'aws-sdk-iam', '~> 1.8'
 gem 'aws-sdk-secretsmanager', '~> 1.0'
 gem 'aws-sdk-ses', '~> 1.13'

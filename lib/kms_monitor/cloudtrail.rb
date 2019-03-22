@@ -4,13 +4,15 @@ require 'aws-sdk-dynamodb'
 module IdentityKMSMonitor
 
   # Class for inputting CloudTrail events into DynamoDB
-  class AwsCloudTrailEventWriter
+  class CloudTrailToDynamoHandler
 
     attr_reader :dynamo
 
     def initialize(log_level: Logger::INFO, dry_run: true)
       log.level = log_level
       log.debug("Initializing, dry_run: #{dry_run.inspect}")
+
+      @dry_run = dry_run
 
       begin
         @dynamo = Aws::DynamoDB::Client.new
@@ -29,6 +31,7 @@ module IdentityKMSMonitor
     def process_event
       records = @lambda_event["Records"]
       process_records(records)
+    end
 
     def process_records(records)
       records.each do |record|
@@ -93,7 +96,7 @@ module IdentityKMSMonitor
       rescue Aws::DynamoDB::Errors::ServiceError => error
 	puts "Failure adding event: "
 	puts "#{error.message}"
-       end
+      end
     end
 
     def log

@@ -3,6 +3,7 @@
 
 require 'bundler/setup'
 require_relative './lib/audit'
+require_relative './lib/kms_monitor'
 
 # Parent class for lambda handlers
 class AbstractLambdaHandler
@@ -81,7 +82,7 @@ module Functions
   end
 
   # Lambda handler for cloudtrail-to-dynamo
-  class CloudTrailToDynamoHandler < AbstractLambdaHandler
+  class KMSCloudTrailHandler < AbstractLambdaHandler
     def self.klass
       IdentityKMSMonitor::CloudTrailToDynamoHandler
     end
