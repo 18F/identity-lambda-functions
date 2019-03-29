@@ -48,7 +48,7 @@ module IdentityKMSMonitor
     def process_record(record)
       body = JSON.parse(record["body"])
 
-      ctevent = Event.new
+      ctevent = CloudTrailEvent.new
       timestamp = DateTime.parse(body["detail"]["eventTime"])
       ctevent.timestamp = timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
       ctevent.uuid = body["detail"]["requestParameters"]["encryptionContext"]["user_uuid"]
@@ -117,7 +117,7 @@ module IdentityKMSMonitor
 
   end
 
-  class Event
+  class CloudTrailEvent
     def uuid=(uuid)
       @uuid = uuid
     end
