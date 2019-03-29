@@ -1,4 +1,4 @@
-file = File.open "spec/unit/kms_monitor/test_cloudtrail_records.json"
+file = File.open "spec/support/test_cloudtrail_records.json"
 test_records = JSON.load(file)
 
 class FakeDynamoClient
