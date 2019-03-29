@@ -24,7 +24,8 @@ module IdentityKMSMonitor
 
     # @return [String]
     def main(_args)
-      log.error('TODO: Figure out what this should do at the CLI. Read stdin?')
+      event = JSON.parse(STDIN.read)
+      inner_process(event)
     end
 
     # @lambda_event and @lambda_context are instance variables we inherit from the parent
@@ -56,7 +57,12 @@ module IdentityKMSMonitor
       # get matching record
       apprecord = get_app_record(ctevent.get_key, ctevent.timestamp)
       puts "apprecord.to_h: #{apprecord.to_h}"
-      insert_into_db(ctevent.get_key, ctevent.timestamp, body, apprecord["CWData"])
+     
+      if apprecord && apprecord.key?('CWData')
+        insert_into_db(ctevent.get_key, ctevent.timestamp, body, apprecord["CWData"])
+      else
+        log.info('No CloudWatch data found for this event.')
+      end
     end
 
     def get_app_record(uuid, timestamp)
