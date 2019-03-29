@@ -56,12 +56,12 @@ module IdentityKMSMonitor
 
       # get matching record
       apprecord = get_app_record(ctevent.get_key, ctevent.timestamp)
-      puts "apprecord.to_h: #{apprecord.to_h}"
+      log.info "apprecord result: #{apprecord.to_h}"
      
       if apprecord && apprecord.key?('CWData')
         insert_into_db(ctevent.get_key, ctevent.timestamp, body, apprecord["CWData"])
       else
-        log.info('No CloudWatch data found for this event.')
+        log.error 'No CloudWatch data found for this event.'
       end
     end
 
@@ -75,10 +75,9 @@ module IdentityKMSMonitor
         consistent_read: false
         })
       rescue Aws::DynamoDB::Errors::ServiceError => error
-        puts "Failure adding event: "
-        puts "#{error.message}"
+        log.info "Failure adding event: #{error.message}"
       end
-      puts "result: ",result
+      log.info "Database query result: #{result}"
       record = result.item
     end
 
@@ -102,11 +101,10 @@ module IdentityKMSMonitor
       
       begin
 	result = dynamo.put_item(params)
-	puts "Added event for user_uuid: #{uuid}"
+	log.info "Added event for user_uuid: #{uuid}"
 	  
       rescue Aws::DynamoDB::Errors::ServiceError => error
-	puts "Failure adding event: "
-	puts "#{error.message}"
+	log.info "Failure adding event: #{error.message}"
       end
     end
 
