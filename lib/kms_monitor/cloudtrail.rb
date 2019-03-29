@@ -33,9 +33,13 @@ module IdentityKMSMonitor
       process_records(records)
     end
 
+    def inner_process(event)
+      @lambda_event = event
+      process_event
+    end
+
     def process_records(records)
       records.each do |record|
-        # puts record
         process_record(record)
       end
     end
@@ -57,7 +61,7 @@ module IdentityKMSMonitor
 
     def get_app_record(uuid, timestamp)
       begin
-        result = DYNAMODB_CLIENT.get_item({
+        result = dynamo.get_item({
           table_name: ENV["DDB_TABLE"],
           key: { "UUID" => uuid, 
                  "Timestamp" => timestamp
@@ -68,6 +72,7 @@ module IdentityKMSMonitor
         puts "Failure adding event: "
         puts "#{error.message}"
       end
+      puts "result: ",result
       record = result.item
     end
 
@@ -90,7 +95,7 @@ module IdentityKMSMonitor
       }
       
       begin
-	result = DYNAMODB_CLIENT.put_item(params)
+	result = dynamo.put_item(params)
 	puts "Added event for user_uuid: #{uuid}"
 	  
       rescue Aws::DynamoDB::Errors::ServiceError => error
