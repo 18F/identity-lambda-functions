@@ -8,14 +8,14 @@ module IdentityKMSMonitor
 
     attr_reader :dynamo
 
-    def initialize(log_level: Logger::INFO, dry_run: true)
+    def initialize(log_level: Logger::INFO, dry_run: true, dynamo: nil)
       log.level = log_level
       log.debug("Initializing, dry_run: #{dry_run.inspect}")
 
       @dry_run = dry_run
 
       begin
-        @dynamo = Aws::DynamoDB::Client.new
+        @dynamo = dynamo || Aws::DynamoDB::Client.new
       rescue StandardError
         log.error('Failed to create DynamoDB client. Do you have AWS creds?')
         raise
@@ -55,7 +55,7 @@ module IdentityKMSMonitor
 
       # get matching record
       apprecord = get_app_record(ctevent.get_key, ctevent.timestamp)
-      puts apprecord.to_h
+      puts "apprecord.to_h: #{apprecord.to_h}"
       insert_into_db(ctevent.get_key, ctevent.timestamp, body, apprecord["CWData"])
     end
 
@@ -81,12 +81,12 @@ module IdentityKMSMonitor
       ttl = DateTime.now + 365
       ttlstring = ttl.strftime('%Y-%m-%dT%H:%M:%SZ')
       item = {
-	UUID: uuid,
-	Timestamp: timestamp,
-	Correlated: "1",
-	CTData: ctdata,
-	CWData: cwdata,
-	TimeToExist: ttlstring
+	"UUID" => uuid,
+	"Timestamp" => timestamp,
+	"Correlated" => "1",
+	"CTData" => ctdata,
+	"CWData" => cwdata,
+	"TimeToExist" => ttlstring
       }
       
       params = {
