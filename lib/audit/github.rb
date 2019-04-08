@@ -49,10 +49,9 @@ module IdentityAudit
     end
 
     def log
-      return @log if @log
-      @log = Logger.new(STDERR)
-      @log.progname = self.class.name
-      @log
+      @log ||= Logger.new(STDERR).tap { |l|
+        l.progname = self.class.name
+      }
     end
 
     # Get and cache team data from team.yml in github
@@ -113,6 +112,7 @@ module IdentityAudit
       if parts.length != 2
         raise 'Expected core_team to contain 2 parts (org, team name)'
       end
+
       parts
     end
 
@@ -121,6 +121,7 @@ module IdentityAudit
       if parts.length != 2
         raise 'Expected team_yml_team to contain 2 parts (org, team name)'
       end
+
       parts
     end
 

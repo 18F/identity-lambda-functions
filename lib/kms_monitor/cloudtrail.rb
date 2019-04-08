@@ -109,10 +109,9 @@ module IdentityKMSMonitor
     end
 
     def log
-      return @log if @log
-      @log = Logger.new(STDERR)
-      @log.progname = self.class.name
-      @log
+      @log ||= Logger.new(STDERR).tap { |l|
+        l.progname = self.class.name
+      }
     end
 
   end

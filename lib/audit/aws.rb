@@ -69,10 +69,9 @@ module IdentityAudit
     end
 
     def log
-      return @log if @log
-      @log = Logger.new(STDERR)
-      @log.progname = self.class.name
-      @log
+      @log ||= Logger.new(STDERR).tap { |l|
+        l.progname = self.class.name
+      }
     end
 
     def get_aws_account_id
@@ -132,6 +131,7 @@ module IdentityAudit
       user_array.each do |u_hash|
         username = get_aws_username(u_hash, log_on_missing: log_on_missing)
         next unless username
+
         mapping[username] = u_hash
       end
 
@@ -253,6 +253,7 @@ module IdentityAudit
       iam_list_users.each do |u|
         team_yml_ok, u_yml_data = check_team_yml(u)
         next unless team_yml_ok
+
         check_password(u, u_yml_data)
         check_keys(u, u_yml_data)
       end
