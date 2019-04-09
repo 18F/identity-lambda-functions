@@ -19,7 +19,7 @@ class AbstractLambdaHandler
 
   def self.cli_run(args)
     # Enable debug mode if DEBUG is set and nonempty
-    if ENV['DEBUG'] && !ENV['DEBUG'].empty?
+    if ENV['DEBUG'].present?
       dry_run = true
       log_level = Logger::DEBUG
     else
@@ -28,7 +28,7 @@ class AbstractLambdaHandler
     end
 
     # override log level from $LOG_LEVEL if provided
-    if ENV['LOG_LEVEL'] && !ENV['LOG_LEVEL'].empty?
+    if ENV['LOG_LEVEL'].present?
       log_level = Integer(ENV.fetch('LOG_LEVEL'))
     end
 
