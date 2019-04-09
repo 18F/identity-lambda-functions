@@ -1,5 +1,5 @@
 file = File.open "spec/support/test_cloudtrail_records.json"
-test_records = JSON.load(file)
+test_event = JSON.load(file)
 
 class FakeDynamoClient
   def inner_client
@@ -41,7 +41,7 @@ RSpec.describe IdentityKMSMonitor::CloudTrailToDynamoHandler do
                  "Timestamp"=>"2019-03-08T13:32:07Z",
                  "CWData"=>"some cloudwatch data"}})
       instance = IdentityKMSMonitor::CloudTrailToDynamoHandler.new(dynamo: fake_dynamo)
-      instance.inner_process(test_records)
+      instance.process_event(test_event)
       final_entry = fake_dynamo.get_item(
         {:table_name=>"fake_table",
          :key=>{"UUID"=>"ad891a65-4560-4669-b422-b61cd5f9c861-password-digest",
