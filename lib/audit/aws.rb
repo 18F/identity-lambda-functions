@@ -316,7 +316,7 @@ module IdentityAudit
     #
     def check_keys(user, user_yml_data)
       user.access_keys.each do |k|
-        age_days = ((Time.now - k.create_date) / 3600 / 24).round
+        age_days = ((Time.now.utc - k.create_date) / 3600 / 24).round
         next if age_days <= AccessKeyAgeWarnDays
 
         enqueue_report(
@@ -328,7 +328,7 @@ module IdentityAudit
       end
 
       user.signing_certificates.each do |k|
-        age_days = ((Time.now - k.upload_date) / 3600 / 24).round
+        age_days = ((Time.now.utc - k.upload_date) / 3600 / 24).round
         next if age_days <= AccessKeyAgeWarnDays
 
         enqueue_report(

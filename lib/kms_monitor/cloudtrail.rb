@@ -30,7 +30,8 @@ module IdentityKMSMonitor
       inner_process(event)
     end
 
-    # @lambda_event and @lambda_context are instance variables we inherit from the parent
+    # @lambda_event and @lambda_context are instance variables we inherit from
+    # the parent
     def process_event
       records = @lambda_event['Records']
       process_records(records)
@@ -51,17 +52,19 @@ module IdentityKMSMonitor
       body = JSON.parse(record['body'])
 
       ctevent = CloudTrailEvent.new
-      timestamp = DateTime.parse(body['detail']['eventTime'])
+      timestamp = Time.parse(body['detail']['eventTime']).utc
       ctevent.timestamp = timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
-      ctevent.uuid = body['detail']['requestParameters']['encryptionContext']['user_uuid']
-      ctevent.context = body['detail']['requestParameters']['encryptionContext']['context']
+      request_parameters = body['detail']['requestParameters']
+      ctevent.uuid = request_parameters['encryptionContext']['user_uuid']
+      ctevent.context = request_parameters['encryptionContext']['context']
 
       # get matching record
       apprecord = get_app_record(ctevent.get_key, ctevent.timestamp)
       log.info "apprecord result: #{apprecord.to_h}"
 
       if apprecord&.key?('CWData')
-        insert_into_db(ctevent.get_key, ctevent.timestamp, body, apprecord['CWData'])
+        insert_into_db(ctevent.get_key, ctevent.timestamp, body,
+                       apprecord['CWData'])
       else
         log.error 'No CloudWatch data found for this event.'
       end
@@ -79,12 +82,12 @@ module IdentityKMSMonitor
         log.info "Failure adding event: #{error.message}"
       end
       log.info "Database query result: #{result}"
-      record = result.item
+      result.item
     end
 
     def insert_into_db(uuid, timestamp, ctdata, cwdata)
       table_name = ENV['DDB_TABLE']
-      ttl = DateTime.now + 365
+      ttl = Time.now.utc + 365
       ttlstring = ttl.strftime('%Y-%m-%dT%H:%M:%SZ')
       item = {
         'UUID' => uuid,
@@ -101,7 +104,7 @@ module IdentityKMSMonitor
       }
 
       begin
-        result = dynamo.put_item(params)
+        dynamo.put_item(params)
         log.info "Added event for user_uuid: #{uuid}"
       rescue Aws::DynamoDB::Errors::ServiceError => error
         log.info "Failure adding event: #{error.message}"
@@ -116,6 +119,7 @@ module IdentityKMSMonitor
 
   end
 
+  # KMS events reported by CloudTrail.
   class CloudTrailEvent
     attr_writer :uuid
     attr_writer :timestamp
