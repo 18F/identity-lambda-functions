@@ -40,9 +40,11 @@ module Functions
     end
 
     unless klass <= AbstractLambdaHandler
-      warn(['Functions.register_handler:',
-            'expected klass to be subclass of AbstractLambdaHandler, got',
-            klass.ancestors.inspect].join(' '))
+      warn([
+        'Functions.register_handler:',
+        'expected klass to be subclass of AbstractLambdaHandler, got',
+        klass.ancestors.inspect,
+      ].join(' '))
     end
 
 

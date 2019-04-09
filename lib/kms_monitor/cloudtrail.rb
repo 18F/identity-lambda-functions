@@ -80,8 +80,10 @@ module IdentityKMSMonitor
       begin
         result = dynamo.get_item(
           table_name: ENV['DDB_TABLE'],
-          key: { 'UUID' => uuid,
-                 'Timestamp' => timestamp },
+          key: {
+            'UUID' => uuid,
+            'Timestamp' => timestamp,
+          },
           consistent_read: false
                                  )
       rescue Aws::DynamoDB::Errors::ServiceError => error
@@ -101,12 +103,12 @@ module IdentityKMSMonitor
         'Correlated' => '1',
         'CTData' => ctdata,
         'CWData' => cwdata,
-        'TimeToExist' => ttlstring
+        'TimeToExist' => ttlstring,
       }
 
       params = {
         table_name: table_name,
-        item: item
+        item: item,
       }
 
       begin
@@ -139,7 +141,7 @@ module IdentityKMSMonitor
         action: @action,
         uuid: @uuid,
         timestamp: @timestamp,
-        context: @context
+        context: @context,
       }
     end
 
