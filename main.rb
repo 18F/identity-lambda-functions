@@ -38,6 +38,7 @@ require_relative './lib/functions'
 # Require handler modules here so they can be loaded by CLI or by AWS Lambda.
 require_relative './lib/audit'
 require_relative './lib/kms_monitor'
+require_relative './lib/reputation_lists'
 
 # ^ Load new function libraries here
 
@@ -60,7 +61,6 @@ Set DEBUG=1 to enable dry run and debug output
 Set LOG_LEVEL=N to set log level to any integer N
   EOM
 end
-
 
 def cli_main
   if ARGV.empty?
