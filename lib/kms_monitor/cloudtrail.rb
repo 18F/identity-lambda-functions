@@ -56,9 +56,9 @@ module IdentityKMSMonitor
       ctevent.timestamp = timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
       request_parameters = body.fetch('detail').fetch('requestParameters')
       ctevent.uuid = request_parameters.fetch(
-                       'encryptionContext').fetch('user_uuid')
+        'encryptionContext').fetch('user_uuid')
       ctevent.context = request_parameters.fetch(
-                          'encryptionContext').fetch('context')
+        'encryptionContext').fetch('context')
 
       # get matching record
       apprecord = get_app_record(ctevent.get_key, ctevent.timestamp)
