@@ -33,7 +33,7 @@ module IdentityKMSMonitor
     # @lambda_event and @lambda_context are instance variables we inherit from
     # the parent
     def process_event
-      records = @lambda_event['Records']
+      records = @lambda_event.fetch('Records')
       process_records(records)
     end
 
@@ -49,7 +49,7 @@ module IdentityKMSMonitor
     end
 
     def process_record(record)
-      body = JSON.parse(record['body'])
+      body = JSON.parse(record.fetch('body'))
 
       ctevent = CloudTrailEvent.new
       timestamp = Time.parse(body.fetch('detail').fetch('eventTime')).utc
@@ -75,20 +75,21 @@ module IdentityKMSMonitor
     def get_app_record(uuid, timestamp)
       begin
         result = dynamo.get_item(
-          table_name: ENV['DDB_TABLE'],
+          table_name: ENV.fetch('DDB_TABLE'),
           key: { 'UUID' => uuid,
                  'Timestamp' => timestamp },
           consistent_read: false
                                  )
       rescue Aws::DynamoDB::Errors::ServiceError => error
-        log.info "Failure adding event: #{error.message}"
+        log.error "Failure looking up event: #{error.message}"
+        raise
       end
       log.info "Database query result: #{result}"
       result.item
     end
 
     def insert_into_db(uuid, timestamp, ctdata, cwdata)
-      table_name = ENV['DDB_TABLE']
+      table_name = ENV.fetch('DDB_TABLE')
       ttl = Time.now.utc + 365
       ttlstring = ttl.strftime('%Y-%m-%dT%H:%M:%SZ')
       item = {
