@@ -11,7 +11,11 @@ require 'aws-sdk-sts'
 module IdentityAudit
 
   # Class for auditing AWS users and keys
-  class AwsIamAuditor
+  class AwsIamAuditor < Functions::AbstractLambdaHandler
+
+    # Make this accessible via CLI
+    Functions.register_handler(self, 'audit-aws')
+
     AccessKeyAgeWarnDays = 180 # 6 months
 
     attr_reader :aws_account_id
@@ -21,8 +25,7 @@ module IdentityAudit
     attr_reader :ses
 
     def initialize(log_level: Logger::INFO, dry_run: true)
-      log.level = log_level
-      log.debug("Initializing, dry_run: #{dry_run.inspect}")
+      super
 
       begin
         @ses = Aws::SES::Client.new
@@ -36,15 +39,30 @@ module IdentityAudit
       @iam = @iam_r.client
 
       @aws_account_id = get_aws_account_id
-      @dry_run = dry_run
 
       @default_email_domain = @audit_config.fetch('default_email_domain')
 
       @group_email_address = @audit_config.fetch('group_cc_address')
     end
 
+    # This is the main CLI handler function
+    #
+    # @see #run_audit
+    #
     # @return [String]
-    def main(_args)
+    #
+    def cli_main(_args)
+      run_audit
+    end
+
+    # This is the main lambda handler function
+    #
+    # @see #run_audit
+    #
+    # @return [String]
+    #
+    def lambda_main(event:, context:)
+      _ = event, context # discard args
       run_audit
     end
 
@@ -62,16 +80,6 @@ module IdentityAudit
       end
 
       @from_address
-    end
-
-    def dry_run?
-      !!@dry_run
-    end
-
-    def log
-      @log ||= Logger.new(STDERR).tap { |l|
-        l.progname = self.class.name
-      }
     end
 
     def get_aws_account_id
@@ -196,10 +204,11 @@ module IdentityAudit
       iam_r.users.to_a
     end
 
-    # Top level method for running audits, invoked by CLI.
+    # Top level method for running audits, invoked by CLI or Lambda.
     #
     # @return [String]
     def run_audit
+      log.info('run_audit()')
       @reports = []
 
       if ENV['PRY_DEBUG']

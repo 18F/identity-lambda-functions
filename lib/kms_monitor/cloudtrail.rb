@@ -6,15 +6,14 @@ require 'aws-sdk-dynamodb'
 module IdentityKMSMonitor
 
   # Class for inputting CloudTrail events into DynamoDB
-  class CloudTrailToDynamoHandler
+  class CloudTrailToDynamoHandler < Functions::AbstractLambdaHandler
 
     attr_reader :dynamo
 
-    def initialize(log_level: Logger::INFO, dry_run: true, dynamo: nil)
-      log.level = log_level
-      log.debug("Initializing, dry_run: #{dry_run.inspect}")
+    Functions.register_handler(self, 'cloudtrail-to-dynamo')
 
-      @dry_run = dry_run
+    def initialize(log_level: Logger::INFO, dry_run: true, dynamo: nil)
+      super(log_level: log_level, dry_run: dry_run)
 
       begin
         @dynamo = dynamo || Aws::DynamoDB::Client.new
@@ -24,30 +23,37 @@ module IdentityKMSMonitor
       end
     end
 
-    # @return [String]
-    def main(_args)
+    # This is the main CLI handler function
+    #
+    def cli_main(_args)
+      log.info('Reading JSON event from STDIN...')
       event = JSON.parse(STDIN.read)
-      inner_process(event)
+      process_event(event)
     end
 
-    # @lambda_event and @lambda_context are instance variables we inherit from
-    # the parent
-    def process_event
-      records = @lambda_event.fetch('Records')
-      process_records(records)
+    # This is the main lambda handler function
+    #
+    # @param [Hash, String] event The event received from AWS Lambda
+    # @param context The context received from AWS Lambda
+    #
+    def lambda_main(event:, context:)
+      _ = context
+      process_event(event)
     end
 
-    def inner_process(event)
-      @lambda_event = event
-      process_event
+    # @param [Hash] event
+    def process_event(event)
+      process_records(event.fetch('Records'))
     end
 
+    # @param [Array<Hash>] records
     def process_records(records)
       records.each do |record|
         process_record(record)
       end
     end
 
+    # @param [Hash] record
     def process_record(record)
       body = JSON.parse(record.fetch('body'))
 
@@ -98,12 +104,12 @@ module IdentityKMSMonitor
         'Correlated' => '1',
         'CTData' => ctdata,
         'CWData' => cwdata,
-        'TimeToExist' => ttlstring
+        'TimeToExist' => ttlstring,
       }
 
       params = {
         table_name: table_name,
-        item: item
+        item: item,
       }
 
       begin
@@ -112,12 +118,6 @@ module IdentityKMSMonitor
       rescue Aws::DynamoDB::Errors::ServiceError => error
         log.info "Failure adding event: #{error.message}"
       end
-    end
-
-    def log
-      @log ||= Logger.new(STDERR).tap { |l|
-        l.progname = self.class.name
-      }
     end
 
   end
@@ -134,7 +134,7 @@ module IdentityKMSMonitor
       {
         uuid: @uuid,
         timestamp: @timestamp,
-        context: @context
+        context: @context,
       }
     end
 
