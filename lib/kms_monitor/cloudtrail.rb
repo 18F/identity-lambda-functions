@@ -134,7 +134,7 @@ module IdentityKMSMonitor
       @uuid + '-' + @context
     end
 
-    def as_json(_options = {})
+    def to_h(_options = {})
       {
         action: @action,
         uuid: @uuid,
@@ -144,7 +144,7 @@ module IdentityKMSMonitor
     end
 
     def to_json(*options)
-      as_json(*options).to_json(*options)
+      to_h(*options).to_json(*options)
     end
   end
 
