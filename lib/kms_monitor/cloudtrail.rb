@@ -121,14 +121,7 @@ module IdentityKMSMonitor
 
   # KMS events reported by CloudTrail.
   class CloudTrailEvent
-    attr_writer :uuid
-    attr_writer :timestamp
-    attr_writer :context
-    attr_reader :uuid
-
-    attr_reader :timestamp
-
-    attr_reader :context
+    attr_accessor :context, :uuid, :timestamp
 
     def get_key()
       @uuid + '-' + @context
@@ -136,7 +129,6 @@ module IdentityKMSMonitor
 
     def to_h(_options = {})
       {
-        action: @action,
         uuid: @uuid,
         timestamp: @timestamp,
         context: @context
