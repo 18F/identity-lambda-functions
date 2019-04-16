@@ -1,4 +1,6 @@
-file = File.open "spec/support/test_cloudtrail_records.json"
+file = File.open File.expand_path(
+                   '../../../support/test_cloudtrail_records.json', __FILE__)
+
 test_records = JSON.load(file)
 
 class FakeDynamoClient
