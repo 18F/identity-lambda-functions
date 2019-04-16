@@ -52,11 +52,13 @@ module IdentityKMSMonitor
       body = JSON.parse(record['body'])
 
       ctevent = CloudTrailEvent.new
-      timestamp = Time.parse(body['detail']['eventTime']).utc
+      timestamp = Time.parse(body.fetch('detail').fetch('eventTime')).utc
       ctevent.timestamp = timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
-      request_parameters = body['detail']['requestParameters']
-      ctevent.uuid = request_parameters['encryptionContext']['user_uuid']
-      ctevent.context = request_parameters['encryptionContext']['context']
+      request_parameters = body.fetch('detail').fetch('requestParameters')
+      ctevent.uuid = request_parameters.fetch(
+                       'encryptionContext').fetch('user_uuid')
+      ctevent.context = request_parameters.fetch(
+                          'encryptionContext').fetch('context')
 
       # get matching record
       apprecord = get_app_record(ctevent.get_key, ctevent.timestamp)
