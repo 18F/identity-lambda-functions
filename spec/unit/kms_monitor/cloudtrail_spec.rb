@@ -1,7 +1,7 @@
 file = File.open File.expand_path(
                    '../../../support/test_cloudtrail_records.json', __FILE__)
 
-test_records = JSON.load(file)
+test_event = JSON.load(file)
 
 class FakeDynamoClient
   def inner_client
