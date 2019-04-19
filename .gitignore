@@ -4,3 +4,4 @@
 /.bundle
 /cloudlib.yaml
 /.cloudlib-source.override.yaml
+/.yardoc/

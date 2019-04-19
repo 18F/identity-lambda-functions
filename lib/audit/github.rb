@@ -16,14 +16,16 @@ module IdentityAudit
   # organization you wish to audit.
   # Generate the ACCESS_TOKEN at https://github.com/settings/tokens/new
   #
-  class GithubAuditor
+  class GithubAuditor < Functions::AbstractLambdaHandler
     attr_reader :ok
     attr_reader :ses
     attr_reader :lambda_config
 
+    # Make this accessible via CLI
+    Functions.register_handler(self, 'audit-github')
+
     def initialize(log_level: Logger::INFO, dry_run: true)
-      log.level = log_level
-      log.debug("Initializing, dry_run: #{dry_run.inspect}")
+      super
 
       begin
         @ses = Aws::SES::Client.new
@@ -35,24 +37,27 @@ module IdentityAudit
       @lambda_config = IdentityAudit::Config.new.data
 
       @ok = new_octokit_client(token: retrieve_github_access_token)
-
-      @dry_run = dry_run
     end
 
+    # This is the main CLI handler function
+    #
+    # @see #run_audit
+    #
     # @return [String]
-    def main(_args)
+    #
+    def cli_main(_args)
       run_audit
     end
 
-    def dry_run?
-      !!@dry_run
-    end
-
-    def log
-      return @log if @log
-      @log = Logger.new(STDERR)
-      @log.progname = self.class.name
-      @log
+    # This is the main lambda handler function
+    #
+    # @see #run_audit
+    #
+    # @return [String]
+    #
+    def lambda_main(event:, context:)
+      _ = event, context # discard args
+      run_audit
     end
 
     # Get and cache team data from team.yml in github
@@ -113,6 +118,7 @@ module IdentityAudit
       if parts.length != 2
         raise 'Expected core_team to contain 2 parts (org, team name)'
       end
+
       parts
     end
 
@@ -121,6 +127,7 @@ module IdentityAudit
       if parts.length != 2
         raise 'Expected team_yml_team to contain 2 parts (org, team name)'
       end
+
       parts
     end
 
@@ -198,7 +205,7 @@ module IdentityAudit
       children.map! { |c| team_tree(team_obj: c) }
 
       {
-        team_obj => children
+        team_obj => children,
       }
     end
 
@@ -233,6 +240,7 @@ module IdentityAudit
 
     # @return [String] audit report
     def run_audit
+      log.info('run_audit()')
       @reports = []
 
       if ENV['PRY_DEBUG']

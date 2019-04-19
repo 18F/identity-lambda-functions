@@ -1,4 +1,4 @@
-# identity-lamda-functions
+# identity-lambda-functions
 
 Documentation TODO
 

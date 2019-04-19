@@ -7,8 +7,10 @@ group 'development' do
   gem 'rake', '~> 12'
   gem 'rspec', '~> 3.8'
   gem 'rspec_junit_formatter', '~> 0.4'
+  gem 'rubocop', '~> 0.58.0', require: false
 end
 
+gem 'aws-sdk-dynamodb', '~> 1.25'
 gem 'aws-sdk-iam', '~> 1.8'
 gem 'aws-sdk-secretsmanager', '~> 1.0'
 gem 'aws-sdk-ses', '~> 1.13'
