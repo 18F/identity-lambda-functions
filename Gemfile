@@ -5,9 +5,12 @@ source 'https://rubygems.org'
 group 'development' do
   gem 'pry', '~> 0.12'
   gem 'rake', '~> 12'
+  gem 'rubocop', '~> 0.58.0', require: false
+end
+
+group 'test' do
   gem 'rspec', '~> 3.8'
   gem 'rspec_junit_formatter', '~> 0.4'
-  gem 'rubocop', '~> 0.58.0', require: false
 end
 
 gem 'aws-sdk-dynamodb', '~> 1.25'
