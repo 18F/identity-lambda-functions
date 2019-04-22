@@ -4,5 +4,13 @@
     "team_yml_relative_path": "team/team.yml",
     "team_yml_ref": "master",
     "secret_id_for_github_access_token": "global/lambda/audit-github-token"
+  },
+  "identity-reputation-lists": {
+    "ip_set_id": "32091c89-e85c-4ec4-bb8c-5a25b401158f",
+    "urls": [
+      "https://check.torproject.org/exit-addresses",
+      "https://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt",
+      "https://www.spamhaus.org/drop/drop.txt"
+    ]
   }
 }

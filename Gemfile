@@ -11,10 +11,12 @@ group 'development' do
 end
 
 gem 'aws-sdk-dynamodb', '~> 1.25'
-gem 'aws-sdk-iam', '~> 1.8'
-gem 'aws-sdk-secretsmanager', '~> 1.0'
-gem 'aws-sdk-ses', '~> 1.13'
+gem 'aws-sdk-iam', '~> 1.18'
+gem 'aws-sdk-secretsmanager', '~> 1.24.0'
+gem 'aws-sdk-ses', '~> 1.18'
+gem 'aws-sdk-wafregional', '~> 1.17'
 gem 'faraday', '~> 0.15'
+gem 'ipaddress', '~> 0.8.3'
 gem 'netrc', '~> 0.11'
 gem 'octokit', '~> 4.9'
 gem 'subprocess', '~> 1.3'
