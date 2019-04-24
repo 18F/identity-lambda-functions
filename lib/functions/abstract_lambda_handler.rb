@@ -89,6 +89,7 @@ module Functions
     #
     def self.process(event:, context:)
       log.info('Instantiating handler to process lambda event')
+      log.info("Current git revision: #{deployed_git_revision}")
       # Lambda defaults to real run mode
       new_with_env_config(dry_run_default: false)
         .lambda_main(event: event, context: context)
@@ -144,6 +145,10 @@ module Functions
       log.debug('Initializing with config from env')
 
       new(log_level: log_level, dry_run: dry_run, **kwargs)
+    end
+
+    def self.deployed_git_revision
+      File.read(File.join(File.dirname(__FILE__), '../../REVISION.txt')).chomp
     end
   end
 

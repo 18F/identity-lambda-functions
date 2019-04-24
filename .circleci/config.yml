@@ -7,7 +7,11 @@ jobs:
   build:
     docker:
       # specify the version you desire here
-       - image: circleci/ruby:2.5-node-browsers
+      - image: circleci/ruby:2.5-node-browsers
+        environment:
+          # Override CircleCI default directory /usr/local/bundle
+          # We do want the bundler config to be part of the built .zip
+          BUNDLE_APP_CONFIG: '.bundle'
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
