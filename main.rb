@@ -44,7 +44,6 @@ require_relative './lib/kms_monitor'
 
 # Main CLI entrypoint
 #
-# rubocop:disable Style/StderrPuts
 def usage
   STDERR.puts "usage: #{$0} LAMBDA [ARGS...]\n\n"
   STDERR.puts 'known lambdas:'
@@ -60,7 +59,6 @@ Set DEBUG=1 to enable dry run and debug output
 Set LOG_LEVEL=N to set log level to any integer N
   EOM
 end
-
 
 def cli_main
   if ARGV.empty?
@@ -78,7 +76,6 @@ def cli_main
   klass = Functions.get_class(command_name)
   klass.cli_process(ARGV)
 end
-# rubocop:enable Style/StderrPuts
 
 if $0 == __FILE__
   cli_main
