@@ -6,3 +6,4 @@ module IdentityKMSMonitor
 end
 
 require_relative './kms_monitor/cloudtrail'
+require_relative './kms_monitor/cloudwatch'
