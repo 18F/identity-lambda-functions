@@ -10,7 +10,12 @@
           "SenderId": "AIDAIE6VAXUQU2DKHA7DK",
           "ApproximateFirstReceiveTimestamp": "1553209983451"
         },
-        "messageAttributes": {},
+        "messageAttributes": {
+          "RetryCount": {
+            "stringValue": "2",
+            "dataType": "Number"
+          }
+        },
         "md5OfBody": "d9544125a3422c5960bdd1563017e391",
         "eventSource": "aws:sqs",
         "eventSourceARN": "arn:aws:sqs:us-west-2:987654321098:logindotgov-kms-ct-events",
