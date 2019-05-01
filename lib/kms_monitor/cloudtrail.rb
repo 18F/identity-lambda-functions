@@ -83,7 +83,7 @@ module IdentityKMSMonitor
         result = dynamo.get_item(
           table_name: ENV.fetch('DDB_TABLE'),
           key: { 'UUID' => uuid,
-                 'Timestamp' => timestamp },
+                 'Timestamp' => timestamp, },
           consistent_read: false
                                  )
       rescue Aws::DynamoDB::Errors::ServiceError => error

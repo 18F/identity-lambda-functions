@@ -7,3 +7,4 @@ end
 
 require_relative './kms_monitor/cloudtrail'
 require_relative './kms_monitor/cloudwatch'
+require_relative './kms_monitor/events_generator'
