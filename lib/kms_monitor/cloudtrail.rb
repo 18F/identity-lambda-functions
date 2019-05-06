@@ -122,7 +122,7 @@ module IdentityKMSMonitor
           message: logentry.to_json
                      )
       rescue Aws::DynamoDB::Errors::ServiceError => error
-        log.error "Failure publishing to SNS: #{error.message}"
+        log.error "Failure publishing to SNS: #{error.inspect}"
         raise
       end
     end
@@ -141,7 +141,7 @@ module IdentityKMSMonitor
         }
                         )
     rescue Aws::SQS::Errors::ServiceError => error
-      log.error "Failure publishing to SQS: #{error.message}"
+      log.error "Failure publishing to SQS: #{error.inspect}"
       raise
     end
 
@@ -173,7 +173,7 @@ module IdentityKMSMonitor
           consistent_read: true
           )
       rescue Aws::DynamoDB::Errors::ServiceError => error
-        log.error "Failure looking up event: #{error.message}"
+        log.error "Failure looking up event: #{error.inspect}"
         raise
       end
       log.info "Database query result: #{result}"
@@ -204,7 +204,7 @@ module IdentityKMSMonitor
         log.info "Writing event with params: #{params}"
         dynamo.put_item(params)
       rescue Aws::DynamoDB::Errors::ServiceError => error
-        log.info "Failure adding event: #{error.message}"
+        log.info "Failure adding event: #{error.inspect}"
       end
     end
 
