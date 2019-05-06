@@ -18,7 +18,7 @@ RSpec.describe IdentityKMSMonitor::CloudTrailToDynamoHandler do
       fake_dynamo = FakeDynamoClient.new
       fake_dynamo.put_item(
         {:table_name=>"fake_table",
-         :item=>{"UUID"=>"ad891a65-4560-4669-b422-b61cd5f9c861-password-digest",
+         :item=>{"UUID"=>"ad891a65-1984-0707-b422-b61cd5f9c861-password-digest",
                  "Timestamp"=>"2019-03-08T13:32:07Z",
                  "CWData"=>"some cloudwatch data"}})
       instance = IdentityKMSMonitor::CloudTrailToDynamoHandler.new(dynamo: fake_dynamo, sns: fake_sns)
@@ -27,7 +27,7 @@ RSpec.describe IdentityKMSMonitor::CloudTrailToDynamoHandler do
       # verify the database got updated with the correlation
       final_entry = fake_dynamo.get_item(
         {:table_name=>"fake_table",
-         :key=>{"UUID"=>"ad891a65-4560-4669-b422-b61cd5f9c861-password-digest",
+         :key=>{"UUID"=>"ad891a65-1984-0707-b422-b61cd5f9c861-password-digest",
                 "Timestamp"=>"2019-03-08T13:32:07Z"}})
       expect(final_entry.item['Correlated']).to eq '1'
 
@@ -58,6 +58,13 @@ RSpec.describe IdentityKMSMonitor::CloudTrailToDynamoHandler do
       fake_dynamo = FakeDynamoClient.new
       instance = IdentityKMSMonitor::CloudTrailToDynamoHandler.new(dynamo: fake_dynamo, sns: fake_sns)
       instance.process_event(retried_event)
+
+      # verify the non-correlated item was written to the database
+      final_entry = fake_dynamo.get_item(
+        {:table_name=>"fake_table",
+         :key=>{"UUID"=>"ad891a65-1984-0707-b422-b61cd5f9c861-password-digest",
+                "Timestamp"=>"2019-03-08T13:32:07Z"}})
+      expect(final_entry.item['Correlated']).to eq '0'
 
       # verify we published the correlation message to SNS
       sns_message = JSON.parse(
