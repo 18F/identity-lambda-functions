@@ -21,7 +21,7 @@ module IdentityKMSMonitor
       begin
         @dynamo = dynamo || Aws::DynamoDB::Client.new
         @sns = sns || Aws::SNS::Client.new
-        @sqs = sqs || Aws::SQS::Client.new(region: ENV.fetch('AWS_REGION'))
+        @sqs = sqs || Aws::SQS::Client.new
       rescue StandardError
         log.error('Failed to create DynamoDB client. Do you have AWS creds?')
         raise
