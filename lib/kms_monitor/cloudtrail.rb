@@ -146,18 +146,9 @@ module IdentityKMSMonitor
     end
 
     def get_attribute_value_int(record, attribute_key)
-      attributes = record.fetch('messageAttributes', nil)
-      log.info("message attributes: #{attributes}")
-      if attributes
-        attribute = attributes.fetch(attribute_key, nil)
-      end
-      if attribute
-        attribute_value = attribute.fetch('stringValue', '0')
-      end
-      if !attributes || !attribute
-        attribute_value = '0'
-      end
-      Integer(attribute_value)
+      attributes = record.fetch('messageAttributes', {})
+      log.info("message attributes: #{attributes.inspect}")
+      Integer(attributes.fetch(attribute_key, {})['stringValue'] || 0)
     end
 
     def calculate_delay(counter)
