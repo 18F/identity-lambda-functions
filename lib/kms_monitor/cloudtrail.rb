@@ -61,7 +61,7 @@ module IdentityKMSMonitor
     # @param [Hash] record
     def process_record(record)
       body = JSON.parse(record.fetch('body'))
-      log.info("record body: #{body}")
+      log.info("record body: #{body.inspect}")
 
       ctevent = CloudTrailEvent.new
       timestamp = Time.parse(body.fetch('detail').fetch('eventTime')).utc
