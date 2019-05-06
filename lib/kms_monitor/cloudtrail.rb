@@ -93,7 +93,7 @@ module IdentityKMSMonitor
         put_message_queue(body, delay, retrycount)
       else
         # all retries exhausted, put record in table uncorrelated
-        log.info('No matching CloudWatch event found and retries exhausted. ' +
+        log.warn('No matching CloudWatch event found and retries exhausted. ' +
                  'Marking this event uncorrelated in the database and ' +
                  'notifying SNS.')
         insert_into_db(ctevent.get_key, ctevent.timestamp, body, '', 0)
