@@ -22,6 +22,10 @@ module IdentityKMSMonitor
         @dynamo = dynamo || Aws::DynamoDB::Client.new
         @sns = sns || Aws::SNS::Client.new
         @sqs = sqs || Aws::SQS::Client.new
+        @sns_event_topic_arn = ENV.fetch('SNS_EVENT_TOPIC_ARN')
+        @dynamodb_table_name = ENV.fetch('DDB_TABLE')
+        @retention_days = Integer(ENV.fetch('RETENTION_DAYS'))
+        @cloudtrail_queue_url = ENV.fetch('CT_QUEUE_URL')
       rescue StandardError
         log.error('Failed to create DynamoDB client. Do you have AWS creds?')
         raise
@@ -114,7 +118,7 @@ module IdentityKMSMonitor
 
       begin
         @sns.publish(
-          topic_arn: ENV.fetch('SNS_EVENT_TOPIC_ARN'),
+          topic_arn: @sns_event_topic_arn,
           message: logentry.to_json
                      )
       rescue Aws::DynamoDB::Errors::ServiceError => error
@@ -126,7 +130,7 @@ module IdentityKMSMonitor
     def put_message_queue(message_body, message_delay, message_retrycount)
       bodystring = message_body.to_json
       @sqs.send_message(
-        queue_url: ENV.fetch('CT_QUEUE_URL'),
+        queue_url: @cloudtrail_queue_url,
         message_body: bodystring,
         delay_seconds: message_delay,
         message_attributes: {
@@ -163,7 +167,7 @@ module IdentityKMSMonitor
     def get_db_record(uuid, timestamp)
       begin
         result = dynamo.get_item(
-          table_name: ENV.fetch('DDB_TABLE'),
+          table_name: @dynamodb_table_name,
           key: { 'UUID' => uuid,
                  'Timestamp' => timestamp, },
           consistent_read: true
@@ -177,8 +181,8 @@ module IdentityKMSMonitor
     end
 
     def insert_into_db(uuid, timestamp, ctdata, cwdata, _correlated)
-      table_name = ENV.fetch('DDB_TABLE')
-      ttl = Time.now.utc + Integer(ENV.fetch('RETENTION_DAYS'))
+      table_name = @dynamodb_table_name
+      ttl = Time.now.utc + @retention_days
       ttlstring = ttl.strftime('%Y-%m-%dT%H:%M:%SZ')
       item = {
         'UUID' => uuid,
