@@ -167,7 +167,7 @@ module IdentityKMSMonitor
         log.error "Failure looking up event: #{error.inspect}"
         raise
       end
-      log.info "Database query result: #{result}"
+      log.info "Database query result: #{result.inspect}"
       result.item
     end
 
@@ -192,7 +192,7 @@ module IdentityKMSMonitor
       }
 
       begin
-        log.info "Writing event with params: #{params}"
+        log.info "Writing event with params: #{params.inspect}"
         dynamo.put_item(params)
       rescue Aws::DynamoDB::Errors::ServiceError => error
         log.info "Failure adding event: #{error.inspect}"
