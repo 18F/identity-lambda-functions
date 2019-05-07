@@ -13,6 +13,8 @@ group 'test' do
   gem 'rspec_junit_formatter', '~> 0.4'
 end
 
+gem 'aws-sdk-cloudwatch', '~> 1.4'
+gem 'aws-sdk-cloudwatchevents', '~> 1.3'
 gem 'aws-sdk-dynamodb', '~> 1.25'
 gem 'aws-sdk-iam', '~> 1.8'
 gem 'aws-sdk-secretsmanager', '~> 1.0'
