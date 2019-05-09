@@ -106,7 +106,7 @@ module IdentityKMSMonitor
 
       table_name = ENV.fetch('DDB_TABLE')
       ttl = Time.now.utc + Integer(ENV.fetch('RETENTION_DAYS'))
-      ttlstring = ttl.strftime('%Y-%m-%dT%H:%M:%SZ')
+      ttlstring = ttl.strftime('%s')
       item = {
         'UUID' => kmsevent.get_key,
         'Timestamp' => kmsevent.timestamp,
