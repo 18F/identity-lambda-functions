@@ -174,7 +174,7 @@ module IdentityKMSMonitor
     def insert_into_db(uuid, timestamp, ctdata, cwdata, correlated)
       table_name = @dynamodb_table_name
       ttl = Time.now.utc + @retention_days
-      ttlstring = ttl.strftime('%Y-%m-%dT%H:%M:%SZ')
+      ttlstring = ttl.strftime('%s')
       item = {
         'UUID' => uuid,
         'Timestamp' => timestamp,
