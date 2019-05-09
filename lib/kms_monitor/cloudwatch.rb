@@ -48,7 +48,7 @@ module IdentityKMSMonitor
     def insert_into_db(uuid, timestamp, data)
       table_name = ENV.fetch('DDB_TABLE')
       ttl = Time.now.utc + Integer(ENV.fetch('RETENTION_DAYS'))
-      ttlstring = ttl.strftime('%Y-%m-%dT%H:%M:%SZ')
+      ttlstring = ttl.strftime('%s')
       item = {
         'UUID' => uuid,
         'Timestamp' => timestamp,
