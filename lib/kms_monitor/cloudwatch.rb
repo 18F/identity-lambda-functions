@@ -151,15 +151,21 @@ module IdentityKMSMonitor
 
       return if logdata.fetch('messageType') == 'CONTROL_MESSAGE'
 
-      logevents = logdata.fetch('logEvents')[0].fetch('extractedFields')
+      logdata.fetch('logEvents').each do |log_event|
+        process_log_event(log_event)
+      end
+    end
+
+    def process_log_event(log_event)
+      extracted_fields = log_event.fetch('extractedFields')
 
       kmsevent = CloudWatchKMSEvent.new
 
-      timestamp = Time.parse(logevents.fetch('datetime'))
+      timestamp = Time.parse(extracted_fields.fetch('datetime'))
       kmsevent.timestamp = timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
 
       # cleanup extra character at beginning of Json string
-      jsondata = logevents.fetch('json')
+      jsondata = extracted_fields.fetch('json')
       jsondata = jsondata[1..-1]
 
       jsondata = JSON.parse(jsondata)
