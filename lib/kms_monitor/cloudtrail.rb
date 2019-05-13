@@ -26,6 +26,7 @@ module IdentityKMSMonitor
         @dynamodb_table_name = ENV.fetch('DDB_TABLE')
         @retention_seconds = Integer(ENV.fetch('RETENTION_DAYS')) * (60*60*24)
         @cloudtrail_queue_url = ENV.fetch('CT_QUEUE_URL')
+        @max_skew_seconds = Integer(ENV.fetch('MAX_SKEW_SECONDS', '2'))
       rescue StandardError
         log.error('Failed to create DynamoDB client. Do you have AWS creds?')
         raise
@@ -62,6 +63,11 @@ module IdentityKMSMonitor
       end
     end
 
+    # @param [Time] timestamp from which to subtract seconds
+    def minimum_timestamp(event_timestamp)
+      event_timestamp - @max_skew_seconds
+    end
+
     # @param [Hash] record
     def process_record(record)
       body = JSON.parse(record.fetch('body'))
@@ -69,14 +75,17 @@ module IdentityKMSMonitor
 
       ctevent = CloudTrailEvent.new
       timestamp = Time.parse(body.fetch('detail').fetch('eventTime')).utc
-      ctevent.timestamp = timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+      time_format = '%Y-%m-%dT%H:%M:%SZ'
+      ctevent.timestamp = timestamp.strftime(time_format)
       request_parameters = body.fetch('detail').fetch('requestParameters')
       ctevent.uuid = request_parameters.fetch(
         'encryptionContext').fetch('user_uuid')
       ctevent.context = request_parameters.fetch(
         'encryptionContext').fetch('context')
 
-      dbrecord = get_db_record(ctevent.get_key, ctevent.timestamp)
+      timestamp_min_str = (minimum_timestamp(timestamp)).strftime(time_format)
+      dbrecord = get_db_record(ctevent.get_key, timestamp_min_str,
+                               ctevent.timestamp)
 
       # calculate retry count will not be used if we found the record in table
       retrycount = get_attribute_value_int(record, 'RetryCount')
@@ -155,20 +164,38 @@ module IdentityKMSMonitor
       [900, (counter**2) * 30].min
     end
 
-    def get_db_record(uuid, timestamp)
+    def get_db_record(uuid, timestamp_min, timestamp_max)
       begin
-        result = dynamo.get_item(
+        result = dynamo.query(
           table_name: @dynamodb_table_name,
-          key: { 'UUID' => uuid,
-                 'Timestamp' => timestamp, },
-          consistent_read: true
+          key_condition_expression:
+            ('#uuid = :uuid_value AND #timestamp BETWEEN ' +
+             ':timestamp_min AND :timestamp_max'),
+          # We want entries marked uncorrelated, but which have CloudWatch
+          # data written.
+          filter_expression: ('#correlated = :correlated_value AND ' +
+                              'attribute_exists(#cwdata)'),
+          expression_attribute_names: {'#uuid' => 'UUID',
+                                       '#correlated' => 'Correlated',
+                                       '#timestamp' => 'Timestamp',
+                                       '#cwdata' => 'CWData'},
+          expression_attribute_values: {
+            ':uuid_value': uuid,
+            ':correlated_value': '0',
+            ':timestamp_min': timestamp_min,
+            ':timestamp_max': timestamp_max,
+            },
           )
       rescue Aws::DynamoDB::Errors::ServiceError => error
         log.error "Failure looking up event: #{error.inspect}"
         raise
       end
       log.info "Database query result: #{result.inspect}"
-      result.item
+      # It's unlikely but technically possible that we could have multiple
+      # results here. These are ordered by the range key, Timestamp, so let's
+      # return the oldest one.
+      # attached to it already.
+      result.items[0]
     end
 
     def insert_into_db(uuid, timestamp, ctdata, cwdata, correlated)
