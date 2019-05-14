@@ -96,7 +96,7 @@ module IdentityKMSMonitor
         # generate event
         log.info('Matching CloudWatch event found. Marking correlated in ' +
                  'database and notifying SNS.')
-        insert_into_db(ctevent.get_key, ctevent.timestamp, body,
+        insert_into_db(ctevent.get_key, dbrecord.fetch('Timestamp'), body,
                        dbrecord.fetch('CWData'), 1)
         log_event_sns(ctevent, body.fetch('id'), true)
       elsif retrycount <= 5
