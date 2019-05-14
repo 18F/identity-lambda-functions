@@ -19,33 +19,29 @@ RSpec.describe IdentityKMSMonitor::CloudWatchKMSHandler do
   describe 'something in the cloudtrail class' do
     it 'can process an empty list of records' do
       ENV['DDB_TABLE'] = 'fake_table'
-      fake_dynamo = FakeDynamoClient.new
-      instance = IdentityKMSMonitor::CloudWatchKMSHandler.new(dynamo: fake_dynamo)
+      instance = IdentityKMSMonitor::CloudWatchKMSHandler.new
       instance.process_event({ 'Records' => [] })
     end
     it 'can process a control message' do
       ENV['DDB_TABLE'] = 'fake_table'
       ENV['RETENTION_DAYS'] = '365'
-      fake_dynamo = FakeDynamoClient.new
-      instance = IdentityKMSMonitor::CloudWatchKMSHandler.new(dynamo: fake_dynamo)
+      instance = IdentityKMSMonitor::CloudWatchKMSHandler.new
       instance.process_event(control_event)
     end
     it 'can process a decrypt event' do
       ENV['DDB_TABLE'] = 'fake_table'
       ENV['RETENTION_DAYS'] = '365'
-      fake_dynamo = FakeDynamoClient.new
+      fake_dynamo = Aws::DynamoDB::Client.new(stub_responses: true)
+      fake_dynamo.stub_responses(:get_item, {item: nil})
+      fake_dynamo.stub_responses(:put_item, nil)
       instance = IdentityKMSMonitor::CloudWatchKMSHandler.new(dynamo: fake_dynamo)
       instance.process_event(decrypt_event)
-      password_entry = fake_dynamo.get_item(
-        {:table_name=>"fake_table",
-         :key=>{"UUID"=>"cafecafe-b4e6-4a4c-8e9d-beef2e191f0b-password-digest",
-                "Timestamp"=>"2019-04-24T00:25:00Z"}})
-      expect(password_entry.item['CWData']['context']).to eq 'password-digest'
-      pii_entry = fake_dynamo.get_item(
-        {:table_name=>"fake_table",
-         :key=>{"UUID"=>"cafecafe-b4e6-4a4c-8e9d-beef2e191f0b-pii-encryption",
-                "Timestamp"=>"2019-04-24T00:25:00Z"}})
-      expect(pii_entry.item['CWData']['context']).to eq 'pii-encryption'
+
+      password_entry = fake_dynamo.api_requests[1][:params][:item]
+      expect(password_entry['CWData'][:m]['context'][:s]).to eq 'password-digest'
+
+      pii_entry = fake_dynamo.api_requests[3][:params][:item]
+      expect(pii_entry['CWData'][:m]['context'][:s]).to eq 'pii-encryption'
     end
   end
 end
