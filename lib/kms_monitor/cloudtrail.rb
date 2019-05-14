@@ -24,7 +24,7 @@ module IdentityKMSMonitor
         @sqs = sqs || Aws::SQS::Client.new
         @sns_event_topic_arn = ENV.fetch('SNS_EVENT_TOPIC_ARN')
         @dynamodb_table_name = ENV.fetch('DDB_TABLE')
-        @retention_days = Integer(ENV.fetch('RETENTION_DAYS'))
+        @retention_seconds = Integer(ENV.fetch('RETENTION_DAYS')) * (60*60*24)
         @cloudtrail_queue_url = ENV.fetch('CT_QUEUE_URL')
       rescue StandardError
         log.error('Failed to create DynamoDB client. Do you have AWS creds?')
@@ -173,7 +173,7 @@ module IdentityKMSMonitor
 
     def insert_into_db(uuid, timestamp, ctdata, cwdata, correlated)
       table_name = @dynamodb_table_name
-      ttl = Time.now.utc + @retention_days
+      ttl = Time.now.utc + @retention_seconds
       ttlstring = ttl.strftime('%s')
       item = {
         'UUID' => uuid,
