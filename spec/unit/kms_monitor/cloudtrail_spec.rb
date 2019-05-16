@@ -19,6 +19,7 @@ RSpec.describe IdentityKMSMonitor::CloudTrailToDynamoHandler do
       fake_dynamo = Aws::DynamoDB::Client.new(stub_responses: true)
       fake_record = {"UUID"=>"ad891a65-1984-0707-b422-b61cd5f9c861-password-digest",
                      "Timestamp"=>"2019-03-08T13:32:07Z",
+                     "Correlated"=>"0",
                      "CWData"=>"some cloudwatch data"}
       fake_dynamo.stub_responses(:query, {items: [fake_record]})
       instance = IdentityKMSMonitor::CloudTrailToDynamoHandler.new(dynamo: fake_dynamo, sns: fake_sns)
