@@ -171,17 +171,13 @@ module IdentityKMSMonitor
           key_condition_expression:
             ('#uuid = :uuid_value AND #timestamp BETWEEN ' +
              ':timestamp_min AND :timestamp_max'),
-          # We want entries marked uncorrelated, but which have CloudWatch
-          # data written.
-          filter_expression: ('#correlated = :correlated_value AND ' +
-                              'attribute_exists(#cwdata)'),
+          # We want entries that have CloudWatch data written already.
+          filter_expression: 'attribute_exists(#cwdata)',
           expression_attribute_names: {'#uuid' => 'UUID',
-                                       '#correlated' => 'Correlated',
                                        '#timestamp' => 'Timestamp',
                                        '#cwdata' => 'CWData'},
           expression_attribute_values: {
             ':uuid_value': uuid,
-            ':correlated_value': '0',
             ':timestamp_min': timestamp_min,
             ':timestamp_max': timestamp_max,
             },
@@ -192,10 +188,12 @@ module IdentityKMSMonitor
       end
       log.info "Database query result: #{result.inspect}"
       # It's unlikely but technically possible that we could have multiple
-      # results here. These are ordered by the range key, Timestamp, so let's
-      # return the oldest one.
-      # attached to it already.
-      result.items[0]
+      # results here. By default these are ordered by the range key, Timestamp.
+      # We want to focus on uncorrelated ones first, so we sort by Correlated
+      # then by Timestamp.
+      sorted_items = result.items.sort_by{|i| [i.fetch('Correlated'),
+                                               i.fetch('Timestamp')]}
+      sorted_items[0]
     end
 
     def insert_into_db(uuid, timestamp, ctdata, cwdata, correlated)
