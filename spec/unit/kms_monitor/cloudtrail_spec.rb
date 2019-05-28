@@ -29,7 +29,7 @@ RSpec.describe IdentityKMSMonitor::CloudTrailToDynamoHandler do
       dynamo_query_attributes = fake_dynamo.api_requests[
         0][:params][:expression_attribute_values]
       expect(dynamo_query_attributes[":timestamp_min"][:s]).to eq '2019-03-08T13:32:02Z'
-      expect(dynamo_query_attributes[":timestamp_max"][:s]).to eq '2019-03-08T13:32:07Z'
+      expect(dynamo_query_attributes[":timestamp_max"][:s]).to eq '2019-03-08T13:32:12Z'
 
       # verify the database got updated with the correlation
       dynamo_write = fake_dynamo.api_requests[1][:params][:item]

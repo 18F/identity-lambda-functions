@@ -26,7 +26,7 @@ module IdentityKMSMonitor
         @dynamodb_table_name = ENV.fetch('DDB_TABLE')
         @retention_seconds = Integer(ENV.fetch('RETENTION_DAYS')) * (60*60*24)
         @cloudtrail_queue_url = ENV.fetch('CT_QUEUE_URL')
-        @max_skew_seconds = Integer(ENV.fetch('MAX_SKEW_SECONDS', '2'))
+        @max_skew_seconds = Integer(ENV.fetch('MAX_SKEW_SECONDS', '8'))
       rescue StandardError
         log.error('Failed to create DynamoDB client. Do you have AWS creds?')
         raise
@@ -68,6 +68,10 @@ module IdentityKMSMonitor
       event_timestamp - @max_skew_seconds
     end
 
+    def maximum_timestamp(event_timestamp)
+      event_timestamp + @max_skew_seconds
+    end
+
     # @param [Hash] record
     def process_record(record)
       body = JSON.parse(record.fetch('body'))
@@ -84,8 +88,9 @@ module IdentityKMSMonitor
         'encryptionContext').fetch('context')
 
       timestamp_min_str = (minimum_timestamp(timestamp)).strftime(time_format)
+      timestamp_max_str = (maximum_timestamp(timestamp)).strftime(time_format)
       dbrecord = get_db_record(ctevent.get_key, timestamp_min_str,
-                               ctevent.timestamp)
+                               timestamp_max_str)
 
       # calculate retry count will not be used if we found the record in table
       retrycount = get_attribute_value_int(record, 'RetryCount')
