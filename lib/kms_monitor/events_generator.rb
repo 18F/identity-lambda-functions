@@ -6,6 +6,8 @@ require 'aws-sdk-cloudwatchevents'
 
 module IdentityKMSMonitor
 
+  INFO_URL = 'https://docs.google.com/document/d/1MYkxYPd1pNTZLaVCpw4kX6zlviEl8Ue1qFbI1lYzD_Q/edit#bookmark=id.d4xvjo17dup8'
+
   # Class for receiving KMS correlation events from the CloudTrail lambda and
   # creating CloudWatch events for easy monitoring.
   class CloudWatchEventGenerator < Functions::AbstractLambdaHandler
@@ -102,6 +104,7 @@ module IdentityKMSMonitor
         'context' => message.fetch('context').to_s,
         'timestamp' => message.fetch('timestamp').to_s,
         'cloudtrail_id' => message.fetch('cloudtrail_id').to_s,
+        'info_url' => INFO_URL,
       }.to_json
 
       log.info 'Writing a CloudWatch event for an uncorrelated KMS event.'
