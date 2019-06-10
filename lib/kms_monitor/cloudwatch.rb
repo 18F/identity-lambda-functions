@@ -112,7 +112,7 @@ module IdentityKMSMonitor
         'Timestamp' => kmsevent.timestamp,
         'Correlated' => '1',
         'CTData' => dbrecord.fetch('CTData'),
-        'CWData' => kmsevent.as_json,
+        'CWData' => kmsevent.to_json,
         'TimeToExist' => ttlstring,
       }
 
