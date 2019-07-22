@@ -57,7 +57,7 @@ RSpec.describe IdentityKMSMonitor::CloudTrailToDynamoHandler do
     it 'alerts SNS when retries are all used up' do
       retried_event = test_event
       retried_event["Records"][0]["messageAttributes"]["RetryCount"][
-        "stringValue"] = '5'
+        "stringValue"] = '20'
       fake_sns = Aws::SNS::Client.new(stub_responses: true)
       fake_sns.stub_responses(:publish, nil)
       fake_dynamo = Aws::DynamoDB::Client.new(stub_responses: true)
