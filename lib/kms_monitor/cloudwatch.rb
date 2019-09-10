@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'benchmark'
 require 'logger'
 require 'aws-sdk-dynamodb'
 
@@ -63,8 +64,8 @@ module IdentityKMSMonitor
       }
 
       begin
-        dynamo.put_item(params)
-        log.info "Added event for user_uuid: #{uuid}"
+        duration = Benchmark.realtime { dynamo.put_item(params) }
+        log.info "Wrote event for UUID #{uuid} in #{duration.round(6)} seconds"
 
       rescue Aws::DynamoDB::Errors::ServiceError => error
         log.error "Failure adding event: #{error.message}"
@@ -81,14 +82,18 @@ module IdentityKMSMonitor
 
     def get_db_record(uuid, timestamp)
       begin
-        result = dynamo.get_item(
-          table_name: ENV.fetch('DDB_TABLE'),
-          key: {
-            'UUID' => uuid,
-            'Timestamp' => timestamp,
-          },
-          consistent_read: true
-                                 )
+        result = nil
+        duration = Benchmark.realtime do
+          result = dynamo.get_item(
+            table_name: ENV.fetch('DDB_TABLE'),
+            key: {
+              'UUID' => uuid,
+              'Timestamp' => timestamp,
+            },
+            consistent_read: true
+                                   )
+        end
+        log.info "get_item took #{duration.round(6)} seconds"
       rescue Aws::DynamoDB::Errors::ServiceError => error
         log.error "Failure retrieving record from table: #{error.message}"
         raise
@@ -107,8 +112,9 @@ module IdentityKMSMonitor
       table_name = ENV.fetch('DDB_TABLE')
       ttl = Time.now.utc + Integer(ENV.fetch('RETENTION_DAYS'))
       ttlstring = ttl.strftime('%s')
+      uuid = kmsevent.get_key
       item = {
-        'UUID' => kmsevent.get_key,
+        'UUID' => uuid,
         'Timestamp' => kmsevent.timestamp,
         'Correlated' => '1',
         'CTData' => dbrecord.fetch('CTData'),
@@ -122,7 +128,8 @@ module IdentityKMSMonitor
       }
 
       begin
-        dynamo.put_item(params)
+        duration = Benchmark.realtime { dynamo.put_item(params) }
+        log.info "Updated record for UUID #{uuid} in #{duration.round(6)} seconds"
 
       rescue Aws::DynamoDB::Errors::ServiceError => error
         log.error "Failure adding event: #{error.message}"

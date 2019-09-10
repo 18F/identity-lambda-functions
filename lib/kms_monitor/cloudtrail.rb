@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'benchmark'
 require 'logger'
 require 'aws-sdk-dynamodb'
 require 'aws-sdk-sns'
@@ -171,22 +172,26 @@ module IdentityKMSMonitor
 
     def get_db_record(uuid, timestamp_min, timestamp_max)
       begin
-        result = dynamo.query(
-          table_name: @dynamodb_table_name,
-          key_condition_expression:
-            ('#uuid = :uuid_value AND #timestamp BETWEEN ' +
-             ':timestamp_min AND :timestamp_max'),
-          # We want entries that have CloudWatch data written already.
-          filter_expression: 'attribute_exists(#cwdata)',
-          expression_attribute_names: {'#uuid' => 'UUID',
-                                       '#timestamp' => 'Timestamp',
-                                       '#cwdata' => 'CWData'},
-          expression_attribute_values: {
-            ':uuid_value': uuid,
-            ':timestamp_min': timestamp_min,
-            ':timestamp_max': timestamp_max,
-            },
-          )
+        result = nil
+        duration = Benchmark.realtime do
+          result = dynamo.query(
+            table_name: @dynamodb_table_name,
+            key_condition_expression:
+              ('#uuid = :uuid_value AND #timestamp BETWEEN ' +
+               ':timestamp_min AND :timestamp_max'),
+            # We want entries that have CloudWatch data written already.
+            filter_expression: 'attribute_exists(#cwdata)',
+            expression_attribute_names: {'#uuid' => 'UUID',
+                                         '#timestamp' => 'Timestamp',
+                                         '#cwdata' => 'CWData'},
+            expression_attribute_values: {
+              ':uuid_value': uuid,
+              ':timestamp_min': timestamp_min,
+              ':timestamp_max': timestamp_max,
+              },
+            )
+        end
+        log.info "dynamo query took #{duration.round(6)} seconds"
       rescue Aws::DynamoDB::Errors::ServiceError => error
         log.error "Failure looking up event: #{error.inspect}"
         raise
@@ -223,7 +228,8 @@ module IdentityKMSMonitor
 
       begin
         log.info "Writing event with params: #{params.inspect}"
-        dynamo.put_item(params)
+        duration = Benchmark.realtime { dynamo.put_item(params) }
+        log.info "put_item took #{duration.round(6)} seconds"
       rescue Aws::DynamoDB::Errors::ServiceError => error
         log.info "Failure adding event: #{error.inspect}"
       end
