@@ -129,7 +129,7 @@ module IdentityKMSMonitor
 
       begin
         duration = Benchmark.realtime { dynamo.put_item(params) }
-        log.info "Updated record for UUID #{uuid} in #{duration.round(6)} seconds"
+        log.info "Updated record in #{duration.round(6)} seconds"
 
       rescue Aws::DynamoDB::Errors::ServiceError => error
         log.error "Failure adding event: #{error.message}"

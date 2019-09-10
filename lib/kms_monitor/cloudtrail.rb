@@ -25,7 +25,8 @@ module IdentityKMSMonitor
         @sqs = sqs || Aws::SQS::Client.new
         @sns_event_topic_arn = ENV.fetch('SNS_EVENT_TOPIC_ARN')
         @dynamodb_table_name = ENV.fetch('DDB_TABLE')
-        @retention_seconds = Integer(ENV.fetch('RETENTION_DAYS')) * (60*60*24)
+        @retention_seconds = Integer(
+          ENV.fetch('RETENTION_DAYS')) * (60 * 60 * 24)
         @cloudtrail_queue_url = ENV.fetch('CT_QUEUE_URL')
         @max_skew_seconds = Integer(ENV.fetch('MAX_SKEW_SECONDS', '8'))
       rescue StandardError
@@ -88,8 +89,8 @@ module IdentityKMSMonitor
       ctevent.context = request_parameters.fetch(
         'encryptionContext').fetch('context')
 
-      timestamp_min_str = (minimum_timestamp(timestamp)).strftime(time_format)
-      timestamp_max_str = (maximum_timestamp(timestamp)).strftime(time_format)
+      timestamp_min_str = minimum_timestamp(timestamp).strftime(time_format)
+      timestamp_max_str = maximum_timestamp(timestamp).strftime(time_format)
       dbrecord = get_db_record(ctevent.get_key, timestamp_min_str,
                                timestamp_max_str)
 
@@ -181,14 +182,14 @@ module IdentityKMSMonitor
                ':timestamp_min AND :timestamp_max'),
             # We want entries that have CloudWatch data written already.
             filter_expression: 'attribute_exists(#cwdata)',
-            expression_attribute_names: {'#uuid' => 'UUID',
-                                         '#timestamp' => 'Timestamp',
-                                         '#cwdata' => 'CWData'},
+            expression_attribute_names: { '#uuid' => 'UUID',
+                                          '#timestamp' => 'Timestamp',
+                                          '#cwdata' => 'CWData', },
             expression_attribute_values: {
               ':uuid_value': uuid,
               ':timestamp_min': timestamp_min,
               ':timestamp_max': timestamp_max,
-              },
+            }
             )
         end
         log.info "dynamo query took #{duration.round(6)} seconds"
@@ -201,8 +202,10 @@ module IdentityKMSMonitor
       # results here. By default these are ordered by the range key, Timestamp.
       # We want to focus on uncorrelated ones first, so we sort by Correlated
       # then by Timestamp.
-      sorted_items = result.items.sort_by{|i| [i.fetch('Correlated'),
-                                               i.fetch('Timestamp')]}
+      sorted_items = result.items.sort_by { |i|
+        [i.fetch('Correlated'),
+         i.fetch('Timestamp'),]
+      }
       sorted_items[0]
     end
 
