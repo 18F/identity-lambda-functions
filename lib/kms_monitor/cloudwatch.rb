@@ -18,6 +18,8 @@ module IdentityKMSMonitor
 
       begin
         @dynamo = dynamo || Aws::DynamoDB::Client.new
+        @retention_seconds = Integer(
+          ENV.fetch('RETENTION_DAYS')) * (60 * 60 * 24)
       rescue StandardError
         log.error('Failed to create DynamoDB client. Do you have AWS creds?')
         raise
@@ -48,7 +50,7 @@ module IdentityKMSMonitor
 
     def insert_into_db(uuid, timestamp, data)
       table_name = ENV.fetch('DDB_TABLE')
-      ttl = Time.now.utc + Integer(ENV.fetch('RETENTION_DAYS'))
+      ttl = Time.now.utc + @retention_seconds
       ttlstring = ttl.strftime('%s')
       item = {
         'UUID' => uuid,
@@ -110,7 +112,7 @@ module IdentityKMSMonitor
       end
 
       table_name = ENV.fetch('DDB_TABLE')
-      ttl = Time.now.utc + Integer(ENV.fetch('RETENTION_DAYS'))
+      ttl = Time.now.utc + @retention_seconds
       ttlstring = ttl.strftime('%s')
       uuid = kmsevent.get_key
       item = {
