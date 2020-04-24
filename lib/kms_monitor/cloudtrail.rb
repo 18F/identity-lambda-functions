@@ -106,7 +106,7 @@ module IdentityKMSMonitor
         insert_into_db(ctevent.get_key, dbrecord.fetch('Timestamp'), body,
                        dbrecord.fetch('CWData'), 1)
         log_event_sns(ctevent, body.fetch('id'), true)
-      elsif retrycount <= 20
+      elsif retrycount <= 42
         # put message back on queue
         log.info('No matching CloudWatch event found. Requeuing this event.')
         delay = calculate_delay(retrycount)
