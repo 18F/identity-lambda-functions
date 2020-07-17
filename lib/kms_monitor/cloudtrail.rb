@@ -213,12 +213,13 @@ module IdentityKMSMonitor
       table_name = @dynamodb_table_name
       ttl = Time.now.utc + @retention_seconds
       ttlstring = ttl.strftime('%s')
+      ttlnumber = ttlstring.to_i
       item = {
         'UUID' => uuid,
         'Timestamp' => timestamp,
         'Correlated' => correlated.to_s,
         'CTData' => ctdata,
-        'TimeToExist' => ttlstring,
+        'TimeToExist' => ttlnumber,
       }
       unless cwdata.empty?
         item['CWData'] = cwdata
