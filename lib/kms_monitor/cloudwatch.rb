@@ -52,12 +52,13 @@ module IdentityKMSMonitor
       table_name = ENV.fetch('DDB_TABLE')
       ttl = Time.now.utc + @retention_seconds
       ttlstring = ttl.strftime('%s')
+      ttlnumber = ttlstring.to_i
       item = {
         'UUID' => uuid,
         'Timestamp' => timestamp,
         'Correlated' => '0',
         'CWData' => data,
-        'TimeToExist' => ttlstring,
+        'TimeToExist' => ttlnumber,
       }
 
       params = {
