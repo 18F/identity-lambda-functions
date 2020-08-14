@@ -76,9 +76,14 @@ module IdentityKMSMonitor
 
     # @param [Hash] record
     def process_record(record)
+      log.info("event: #{record.inspect}")
       body = JSON.parse(record.fetch('body'))
       log.info("record body: #{body.inspect}")
 
+      originate_sns = body.fetch('Type', :nil)
+      if originate_sns == "Notification"
+        body = JSON.parse(body.fetch('Message'))
+      end
       ctevent = CloudTrailEvent.new
       timestamp = Time.parse(body.fetch('detail').fetch('eventTime')).utc
       time_format = '%Y-%m-%dT%H:%M:%SZ'
