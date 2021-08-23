@@ -7,7 +7,7 @@ jobs:
   build:
     docker:
       # specify the version you desire here
-      - image: circleci/ruby:2.5-node-browsers
+      - image: circleci/ruby:2.7-node-browsers
         environment:
           # Override CircleCI default directory /usr/local/bundle
           # We do want the bundler config to be part of the built .zip
@@ -71,7 +71,7 @@ jobs:
 
       - run:
           name: Install AWS CLI
-          command: "set -euxo pipefail; sudo apt-get update; sudo apt-get install -y python-pip; sudo pip install awscli | cat"
+          command: "set -euxo pipefail; sudo apt-get update; sudo apt-get install -y python3-pip; sudo pip install awscli | cat"
 
       - run:
           name: Upload zip bundle
