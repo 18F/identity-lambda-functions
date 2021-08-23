@@ -71,7 +71,7 @@ jobs:
 
       - run:
           name: Install AWS CLI
-          command: "set -euxo pipefail; sudo apt-get update; sudo apt-get install -y python-pip; sudo pip install awscli | cat"
+          command: "set -euxo pipefail; sudo apt-get update; sudo apt-get install -y python3-pip; sudo pip install awscli | cat"
 
       - run:
           name: Upload zip bundle
