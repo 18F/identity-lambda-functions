@@ -20,7 +20,7 @@ module IdentityAudit
     #   "team/team.yml"
     # @param [Octokit::Client] octokit_client
     # @param [String] ref The name of the Commit/Branch/Tag. Defaults to
-    #   "master"
+    #   "main"
     #
     def self.read_team_yml(team_yml_repo:, team_yml_path:, octokit_client: nil,
                            ref: nil)
