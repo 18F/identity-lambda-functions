@@ -7,16 +7,11 @@ jobs:
   build:
     docker:
       # specify the version you desire here
-      - image: circleci/ruby:2.7-node-browsers
+      - image: cimg/ruby:2.7
         environment:
           # Override CircleCI default directory /usr/local/bundle
           # We do want the bundler config to be part of the built .zip
           BUNDLE_APP_CONFIG: '.bundle'
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
 
     working_directory: ~/repo
 
@@ -39,10 +34,6 @@ jobs:
           paths:
             - ./vendor/bundle
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
-
-      # Database setup
-      #- run: bundle exec rake db:create
-      #- run: bundle exec rake db:schema:load
 
       # run tests!
       - run:
@@ -76,3 +67,4 @@ jobs:
       - run:
           name: Upload zip bundle
           command: scripts/upload-lambda.sh
+
